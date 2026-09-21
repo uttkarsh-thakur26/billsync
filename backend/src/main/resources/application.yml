@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: billsync
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/billsync
+    username: billsync
+    password: billsync
+
+  jpa:
+    # Flyway owns the schema. Hibernate only checks that the entity mappings
+    # agree with it, and fails fast on boot if they do not.
+    hibernate:
+      ddl-auto: validate
+    # Keep the persistence context out of the web layer so lazy loading
+    # happens deliberately inside a service, not accidentally in a controller.
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

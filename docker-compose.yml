@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16
+    container_name: billsync-postgres
+    environment:
+      POSTGRES_DB: billsync
+      POSTGRES_USER: billsync
+      POSTGRES_PASSWORD: billsync
+    ports:
+      - "5432:5432"
+    volumes:
+      - billsync-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billsync -d billsync"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  billsync-pgdata:
