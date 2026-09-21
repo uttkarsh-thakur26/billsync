@@ -10,6 +10,8 @@ spring:
     hibernate:
       ddl-auto: create-drop
     open-in-view: false
+    # Print SQL in tests so you can see how many queries a repository call really makes.
+    show-sql: true
 
   flyway:
     enabled: false
