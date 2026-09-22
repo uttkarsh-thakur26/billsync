@@ -36,7 +36,7 @@ Money is `NUMERIC(12,2)` in the database, `BigDecimal` in Java, and a **string**
 Needs JDK 21, Node 20+, and Docker (or Podman with `podman-compose` and the `podman-docker` shim). Maven is not required; the wrapper downloads it.
 
 ```bash
-git clone https://github.com/YOUR-GITHUB-USERNAME/billsync.git
+git clone https://github.com/uttkarsh-thakur26/billsync.git
 cd billsync
 
 # 1. database
