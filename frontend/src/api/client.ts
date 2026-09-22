@@ -79,3 +79,8 @@ export const getSettlementPlan = (groupId: number) =>
   request<SettlementPlanResponse>('GET', `/groups/${groupId}/settlement-plan`)
 export const recordSettlement = (groupId: number, body: RecordSettlementRequest) =>
   request<SettlementResponse>('POST', `/groups/${groupId}/settlements`, body)
+
+/** Message to show a person for any thrown value. */
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
