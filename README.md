@@ -63,7 +63,7 @@ The tests use in-memory H2 and need neither Docker nor a running backend.
 
 ## API
 
-Twelve endpoints under `/api`. Full request and response schemas are in Swagger.
+Thirteen endpoints under `/api`. Full request and response schemas are in Swagger.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -73,6 +73,7 @@ Twelve endpoints under `/api`. Full request and response schemas are in Swagger.
 | GET | `/api/groups` | List groups with members |
 | GET | `/api/groups/{id}` | Group detail with members |
 | POST | `/api/groups/{id}/members` | Add a member |
+| DELETE | `/api/groups/{id}/members/{userId}` | Remove a member (only when their balance is zero) |
 | POST | `/api/groups/{id}/expenses` | Add an expense |
 | GET | `/api/groups/{id}/expenses` | List a group's expenses, newest first |
 | DELETE | `/api/expenses/{id}` | Delete an expense |
@@ -144,6 +145,10 @@ One shape everywhere, produced by a single `@RestControllerAdvice`:
 ```
 
 `400` for validation and business-rule failures, `404` for unknown resources, `409` for duplicate emails and duplicate memberships.
+
+### Correcting mistakes
+
+There is no edit endpoint and no delete for settlements, on purpose. A wrong expense is deleted and re-added; its shares go with it. A wrong settlement is corrected by recording the reverse payment, which nets it to zero: the ledger is append-only and history is never rewritten. A member can be removed only when their balance in the group is exactly zero, and their past expenses stay on record.
 
 ## Splitting with exact paise
 

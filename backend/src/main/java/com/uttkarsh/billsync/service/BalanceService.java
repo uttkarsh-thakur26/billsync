@@ -41,11 +41,16 @@ public class BalanceService {
     public record MemberBalance(Long userId, BigDecimal balance) {
     }
 
-    /** Net balance for every member of the group, in ascending user-id order, zeros included. */
+    /**
+     * Net balance for every member of the group, in ascending user-id order, zeros
+     * included. Someone who has left the group still appears if a later change put
+     * them back in debt; at zero they are simply history.
+     */
     public List<MemberBalance> balancesFor(Long groupId) {
         requireGroup(groupId);
         List<Long> memberIds = memberRepository.findUserIdsByGroupId(groupId);
         return netBalances(memberIds, debtsFor(groupId)).entrySet().stream()
+                .filter(entry -> memberIds.contains(entry.getKey()) || entry.getValue().signum() != 0)
                 .map(entry -> new MemberBalance(entry.getKey(), entry.getValue()))
                 .toList();
     }

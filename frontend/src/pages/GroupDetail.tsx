@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useActing } from '../acting'
-import { addMember, deleteExpense, errorMessage, getBalances, getGroup, listExpenses } from '../api/client'
+import { addMember, deleteExpense, errorMessage, getBalances, getGroup, listExpenses, removeMember } from '../api/client'
 import type { ExpenseResponse } from '../api/types'
 import { rupees, sign } from '../money'
 import { Alert, btn, btnSecondary, card, Empty, heading, input, Loading } from '../ui'
@@ -79,8 +79,21 @@ export default function GroupDetail() {
         ) : (
           <ul className="flex flex-wrap gap-2">
             {group.members.map((m) => (
-              <li key={m.id} className="rounded-full bg-gray-100 px-3 py-1 text-sm">
+              <li key={m.id} className="flex items-center gap-1 rounded-full bg-gray-100 py-1 pr-2 pl-3 text-sm">
                 {nameOf(m.id)}
+                <button
+                  type="button"
+                  className="rounded-full px-1 leading-none text-gray-400 hover:bg-gray-200 hover:text-gray-700 disabled:opacity-50"
+                  title={`Remove ${m.name} from the group`}
+                  aria-label={`Remove ${m.name} from the group`}
+                  disabled={busy}
+                  onClick={() => {
+                    if (!window.confirm(`Remove ${m.name} from ${group.name}?`)) return
+                    void run(() => removeMember(groupId, m.id))
+                  }}
+                >
+                  ×
+                </button>
               </li>
             ))}
           </ul>

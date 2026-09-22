@@ -1,6 +1,7 @@
 package com.uttkarsh.billsync.service;
 
 import com.uttkarsh.billsync.domain.ExpenseGroup;
+import com.uttkarsh.billsync.domain.GroupMember;
 import com.uttkarsh.billsync.domain.User;
 import com.uttkarsh.billsync.dto.CreateGroupRequest;
 import com.uttkarsh.billsync.dto.GroupResponse;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -22,6 +24,7 @@ public class GroupService {
     private final ExpenseGroupRepository groups;
     private final GroupMemberRepository members;
     private final UserRepository users;
+    private final BalanceService balanceService;
 
     public GroupResponse create(CreateGroupRequest request) {
         ExpenseGroup group = new ExpenseGroup(request.name().trim());
@@ -49,6 +52,26 @@ public class GroupService {
         }
         group.addMember(user);
         return GroupResponse.from(groups.save(group));
+    }
+
+    /**
+     * A member may leave only once they are square with the group. Their expenses
+     * and settlements stay: history is never rewritten, and if a later deletion
+     * puts them back in debt the balance view will show them again.
+     */
+    public void removeMember(Long groupId, Long userId) {
+        if (!groups.existsById(groupId)) {
+            throw new NotFoundException("Group " + groupId + " not found");
+        }
+        GroupMember member = members.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(() -> new NotFoundException("User " + userId + " is not a member of group " + groupId));
+        BigDecimal balance = BalanceService.netBalances(List.of(userId), balanceService.debtsFor(groupId)).get(userId);
+        if (balance.signum() != 0) {
+            String name = member.getUser().getName();
+            String position = balance.signum() < 0 ? "still owes " + balance.negate() : "is still owed " + balance;
+            throw new BadRequestException(name + " " + position + " in this group. Settle up before removing them.");
+        }
+        members.delete(member);
     }
 
     private ExpenseGroup requireGroupWithMembers(Long groupId) {

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,6 +54,13 @@ public class GroupController {
     @Operation(summary = "Add a member")
     public GroupResponse addMember(@PathVariable Long id, @Valid @RequestBody AddMemberRequest request) {
         return groupService.addMember(id, request.userId());
+    }
+
+    @DeleteMapping("/{id}/members/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Remove a member, allowed only when their balance is zero")
+    public void removeMember(@PathVariable Long id, @PathVariable Long userId) {
+        groupService.removeMember(id, userId);
     }
 
     @GetMapping("/{id}/balances")

@@ -68,6 +68,8 @@ export const createGroup = (body: CreateGroupRequest) => request<GroupResponse>(
 export const getGroup = (groupId: number) => request<GroupResponse>('GET', `/groups/${groupId}`)
 export const addMember = (groupId: number, body: AddMemberRequest) =>
   request<GroupResponse>('POST', `/groups/${groupId}/members`, body)
+export const removeMember = (groupId: number, userId: number) =>
+  request<void>('DELETE', `/groups/${groupId}/members/${userId}`)
 
 export const listExpenses = (groupId: number) => request<ExpenseResponse[]>('GET', `/groups/${groupId}/expenses`)
 export const addExpense = (groupId: number, body: CreateExpenseRequest) =>
