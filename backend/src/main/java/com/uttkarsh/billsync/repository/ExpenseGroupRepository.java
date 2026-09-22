@@ -4,6 +4,7 @@ import com.uttkarsh.billsync.domain.ExpenseGroup;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ExpenseGroupRepository extends JpaRepository<ExpenseGroup, Long> {
@@ -15,4 +16,8 @@ public interface ExpenseGroupRepository extends JpaRepository<ExpenseGroup, Long
      */
     @EntityGraph(attributePaths = {"members", "members.user"})
     Optional<ExpenseGroup> findWithMembersById(Long id);
+
+    /** Every group with its members, newest first, still in a single query. */
+    @EntityGraph(attributePaths = {"members", "members.user"})
+    List<ExpenseGroup> findAllByOrderByCreatedAtDescIdDesc();
 }

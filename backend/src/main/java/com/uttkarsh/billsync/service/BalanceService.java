@@ -2,7 +2,6 @@ package com.uttkarsh.billsync.service;
 
 import com.uttkarsh.billsync.domain.Expense;
 import com.uttkarsh.billsync.domain.ExpenseShare;
-import com.uttkarsh.billsync.domain.GroupMember;
 import com.uttkarsh.billsync.domain.Settlement;
 import com.uttkarsh.billsync.repository.ExpenseGroupRepository;
 import com.uttkarsh.billsync.repository.ExpenseRepository;
@@ -45,10 +44,7 @@ public class BalanceService {
     /** Net balance for every member of the group, in ascending user-id order, zeros included. */
     public List<MemberBalance> balancesFor(Long groupId) {
         requireGroup(groupId);
-        List<Long> memberIds = memberRepository.findByGroupId(groupId).stream()
-                .map(GroupMember::getUser)
-                .map(user -> user.getId())
-                .toList();
+        List<Long> memberIds = memberRepository.findUserIdsByGroupId(groupId);
         return netBalances(memberIds, debtsFor(groupId)).entrySet().stream()
                 .map(entry -> new MemberBalance(entry.getKey(), entry.getValue()))
                 .toList();
@@ -56,10 +52,9 @@ public class BalanceService {
 
     /**
      * Every raw debt in the group, one per share owed to somebody else plus one
-     * reversed entry per settlement. This runs three queries regardless of group
-     * size: members are not needed, expenses come with their shares via an entity
-     * graph, and reading an id off a lazy {@code paidBy} or {@code user} proxy does
-     * not trigger a load.
+     * reversed entry per settlement. This runs two queries regardless of group
+     * size: expenses come with their shares via an entity graph, and reading an id
+     * off a lazy {@code paidBy} or {@code user} proxy does not trigger a load.
      */
     public List<Debt> debtsFor(Long groupId) {
         requireGroup(groupId);
