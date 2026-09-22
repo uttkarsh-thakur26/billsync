@@ -54,4 +54,9 @@ public class ExpenseGroup {
         members.add(member);
         return member;
     }
+
+    /** Drops the membership; orphanRemoval deletes the row at flush. */
+    public boolean removeMember(GroupMember member) {
+        return members.remove(member);
+    }
 }

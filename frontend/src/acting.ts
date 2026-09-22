@@ -7,8 +7,10 @@ export const ACTING_USER_KEY = 'billsync.actingUserId'
 export interface Acting {
   users: UserResponse[]
   usersError?: string
-  /** Add a freshly created user to the list without a round trip. */
+  /** Keep the local list in step with creates, renames and deletes, without a round trip. */
   addUser: (user: UserResponse) => void
+  replaceUser: (user: UserResponse) => void
+  dropUser: (userId: number) => void
   actingUserId: number | null
   setActingUserId: (id: number | null) => void
   /** Display name for an id, with "(you)" appended for the acting user. */

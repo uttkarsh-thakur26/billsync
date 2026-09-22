@@ -226,6 +226,18 @@ class ExpenseControllerTest {
     }
 
     @Test
+    void corsPreflightAllowsEveryMethodTheApiUses() throws Exception {
+        // curl never preflights, so a method missing here only shows up in a browser.
+        for (String method : new String[]{"GET", "POST", "PATCH", "DELETE"}) {
+            mvc.perform(options("/api/users/1")
+                            .header("Origin", "http://localhost:5173")
+                            .header("Access-Control-Request-Method", method))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
+        }
+    }
+
+    @Test
     void corsPreflightRejectsOtherOrigins() throws Exception {
         mvc.perform(options("/api/groups/1/expenses")
                         .header("Origin", "http://evil.example")

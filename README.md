@@ -63,12 +63,14 @@ The tests use in-memory H2 and need neither Docker nor a running backend.
 
 ## API
 
-Thirteen endpoints under `/api`. Full request and response schemas are in Swagger.
+Fifteen endpoints under `/api`. Full request and response schemas are in Swagger.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | POST | `/api/users` | Create a user |
 | GET | `/api/users` | List users |
+| PATCH | `/api/users/{id}` | Rename a user or change their email |
+| DELETE | `/api/users/{id}` | Delete a user who is in no group and has no recorded history |
 | POST | `/api/groups` | Create a group (optionally with initial members) |
 | GET | `/api/groups` | List groups with members |
 | GET | `/api/groups/{id}` | Group detail with members |
@@ -148,7 +150,7 @@ One shape everywhere, produced by a single `@RestControllerAdvice`:
 
 ### Correcting mistakes
 
-There is no edit endpoint and no delete for settlements, on purpose. A wrong expense is deleted and re-added; its shares go with it. A wrong settlement is corrected by recording the reverse payment, which nets it to zero: the ledger is append-only and history is never rewritten. A member can be removed only when their balance in the group is exactly zero, and their past expenses stay on record.
+There is no edit endpoint and no delete for settlements, on purpose. A wrong expense is deleted and re-added; its shares go with it. A wrong settlement is corrected by recording the reverse payment, which nets it to zero: the ledger is append-only and history is never rewritten. A member can be removed only when their balance in the group is exactly zero, and their past expenses stay on record. A person can be deleted only once they are in no group and named in no expense or settlement; the foreign keys enforce the second part, so it cannot be bypassed.
 
 ## Splitting with exact paise
 

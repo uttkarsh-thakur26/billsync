@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, Route, Routes } from 'react-router'
 import { ACTING_USER_KEY, ActingContext, useActing, type Acting } from './acting'
-import { createUser, errorMessage, listUsers } from './api/client'
+import { createUser, deleteUser, errorMessage, listUsers, updateUser } from './api/client'
 import type { UserResponse } from './api/types'
 import GroupDetail from './pages/GroupDetail'
 import Home from './pages/Home'
@@ -56,6 +56,8 @@ function ActingUserProvider({ children }: { children: ReactNode }) {
       users,
       usersError,
       addUser: (user) => setUsers((prev) => [...prev, user]),
+      replaceUser: (user) => setUsers((prev) => prev.map((u) => (u.id === user.id ? user : u))),
+      dropUser: (userId) => setUsers((prev) => prev.filter((u) => u.id !== userId)),
       actingUserId: effectiveId,
       setActingUserId,
       nameOf: (id) => {
@@ -69,30 +71,57 @@ function ActingUserProvider({ children }: { children: ReactNode }) {
   return <ActingContext.Provider value={value}>{children}</ActingContext.Provider>
 }
 
+type PersonForm = { mode: 'add' } | { mode: 'edit'; user: UserResponse }
+
 function Header() {
-  const { users, usersError, addUser, actingUserId, setActingUserId } = useActing()
-  const [adding, setAdding] = useState(false)
+  const { users, usersError, addUser, replaceUser, dropUser, actingUserId, setActingUserId } = useActing()
+  const [form, setForm] = useState<PersonForm | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string>()
+  const acting = users.find((u) => u.id === actingUserId)
 
-  async function submit(e: FormEvent) {
-    e.preventDefault()
+  function open(next: PersonForm) {
+    setForm(next)
+    setName(next.mode === 'edit' ? next.user.name : '')
+    setEmail(next.mode === 'edit' ? next.user.email : '')
+    setError(undefined)
+  }
+
+  async function run(action: () => Promise<void>) {
     setSaving(true)
     setError(undefined)
     try {
-      const user = await createUser({ name: name.trim(), email: email.trim() })
-      addUser(user)
-      setActingUserId(user.id)
-      setAdding(false)
-      setName('')
-      setEmail('')
+      await action()
+      setForm(null)
     } catch (err) {
       setError(errorMessage(err))
     } finally {
       setSaving(false)
     }
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    if (!form) return
+    void run(async () => {
+      if (form.mode === 'add') {
+        const user = await createUser({ name: name.trim(), email: email.trim() })
+        addUser(user)
+        setActingUserId(user.id)
+      } else {
+        replaceUser(await updateUser(form.user.id, { name: name.trim(), email: email.trim() }))
+      }
+    })
+  }
+
+  function remove(user: UserResponse) {
+    if (!window.confirm(`Delete ${user.name}? This only works if they are in no group.`)) return
+    void run(async () => {
+      await deleteUser(user.id)
+      dropUser(user.id)
+    })
   }
 
   return (
@@ -118,11 +147,20 @@ function Header() {
               </option>
             ))}
           </select>
-          <button type="button" className={btnSecondary} onClick={() => setAdding((a) => !a)}>
-            {adding ? 'Cancel' : '+ Person'}
+          {acting && (
+            <button type="button" className={btnSecondary} onClick={() => open({ mode: 'edit', user: acting })}>
+              Edit
+            </button>
+          )}
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => (form ? setForm(null) : open({ mode: 'add' }))}
+          >
+            {form ? 'Cancel' : '+ Person'}
           </button>
         </div>
-        {adding && (
+        {form && (
           <form onSubmit={submit} className="flex w-full flex-wrap items-center gap-2">
             <input
               className={input}
@@ -143,8 +181,18 @@ function Header() {
               maxLength={255}
             />
             <button className={btn} disabled={saving}>
-              {saving ? 'Adding…' : 'Add person'}
+              {saving ? 'Saving…' : form.mode === 'add' ? 'Add person' : 'Save'}
             </button>
+            {form.mode === 'edit' && (
+              <button
+                type="button"
+                className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                disabled={saving}
+                onClick={() => remove(form.user)}
+              >
+                Delete {form.user.name}
+              </button>
+            )}
             <Alert message={error} />
           </form>
         )}

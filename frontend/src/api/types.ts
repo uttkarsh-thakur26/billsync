@@ -21,6 +21,12 @@ export interface CreateUserRequest {
   email: string
 }
 
+/** Both optional; whatever is present is changed. */
+export interface UpdateUserRequest {
+  name?: string
+  email?: string
+}
+
 export interface UserResponse {
   id: number
   name: string

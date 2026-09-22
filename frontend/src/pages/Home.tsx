@@ -6,7 +6,7 @@ import { Alert, btn, card, Empty, heading, input, Loading } from '../ui'
 import { useLoad } from '../useLoad'
 
 export default function Home() {
-  const { actingUserId, nameOf } = useActing()
+  const { users, actingUserId, nameOf } = useActing()
   const groups = useLoad(listGroups, [])
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -69,7 +69,10 @@ export default function Home() {
                     <span className="text-xs text-gray-500">{new Date(g.createdAt).toLocaleDateString()}</span>
                   </div>
                   <p className="mt-1 text-sm text-gray-600">
-                    {g.members.length === 0 ? 'No members yet' : g.members.map((m) => m.name).join(', ')}
+                    {g.members.length === 0
+                      ? 'No members yet'
+                      : // Names from the live user list, so a rename in the header shows here at once.
+                        g.members.map((m) => users.find((u) => u.id === m.id)?.name ?? m.name).join(', ')}
                   </p>
                 </Link>
               </li>

@@ -10,6 +10,7 @@ import type {
   RecordSettlementRequest,
   SettlementPlanResponse,
   SettlementResponse,
+  UpdateUserRequest,
   UserResponse,
 } from './types'
 
@@ -62,6 +63,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
 export const listUsers = () => request<UserResponse[]>('GET', '/users')
 export const createUser = (body: CreateUserRequest) => request<UserResponse>('POST', '/users', body)
+export const updateUser = (userId: number, body: UpdateUserRequest) =>
+  request<UserResponse>('PATCH', `/users/${userId}`, body)
+export const deleteUser = (userId: number) => request<void>('DELETE', `/users/${userId}`)
 
 export const listGroups = () => request<GroupResponse[]>('GET', '/groups')
 export const createGroup = (body: CreateGroupRequest) => request<GroupResponse>('POST', '/groups', body)

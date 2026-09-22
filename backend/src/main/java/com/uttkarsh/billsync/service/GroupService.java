@@ -60,10 +60,10 @@ public class GroupService {
      * puts them back in debt the balance view will show them again.
      */
     public void removeMember(Long groupId, Long userId) {
-        if (!groups.existsById(groupId)) {
-            throw new NotFoundException("Group " + groupId + " not found");
-        }
-        GroupMember member = members.findByGroupIdAndUserId(groupId, userId)
+        ExpenseGroup group = requireGroupWithMembers(groupId);
+        GroupMember member = group.getMembers().stream()
+                .filter(m -> m.getUser().getId().equals(userId))
+                .findFirst()
                 .orElseThrow(() -> new NotFoundException("User " + userId + " is not a member of group " + groupId));
         BigDecimal balance = BalanceService.netBalances(List.of(userId), balanceService.debtsFor(groupId)).get(userId);
         if (balance.signum() != 0) {
@@ -71,7 +71,9 @@ public class GroupService {
             String position = balance.signum() < 0 ? "still owes " + balance.negate() : "is still owed " + balance;
             throw new BadRequestException(name + " " + position + " in this group. Settle up before removing them.");
         }
-        members.delete(member);
+        // Through the parent collection, not the repository: with cascade=ALL a row deleted
+        // directly would be re-persisted at flush if the group is still in the session.
+        group.removeMember(member);
     }
 
     private ExpenseGroup requireGroupWithMembers(Long groupId) {
