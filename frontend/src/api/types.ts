@@ -60,6 +60,11 @@ export interface CreateExpenseRequest {
   splitValues?: Record<number, Money>
 }
 
+/** Only the description can change in place. */
+export interface UpdateExpenseRequest {
+  description: string
+}
+
 export interface ShareResponse {
   userId: number
   amountOwed: Money

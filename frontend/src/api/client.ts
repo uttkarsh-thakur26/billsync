@@ -10,6 +10,7 @@ import type {
   RecordSettlementRequest,
   SettlementPlanResponse,
   SettlementResponse,
+  UpdateExpenseRequest,
   UpdateUserRequest,
   UserResponse,
 } from './types'
@@ -78,6 +79,8 @@ export const removeMember = (groupId: number, userId: number) =>
 export const listExpenses = (groupId: number) => request<ExpenseResponse[]>('GET', `/groups/${groupId}/expenses`)
 export const addExpense = (groupId: number, body: CreateExpenseRequest) =>
   request<ExpenseResponse>('POST', `/groups/${groupId}/expenses`, body)
+export const renameExpense = (expenseId: number, body: UpdateExpenseRequest) =>
+  request<ExpenseResponse>('PATCH', `/expenses/${expenseId}`, body)
 export const deleteExpense = (expenseId: number) => request<void>('DELETE', `/expenses/${expenseId}`)
 
 export const getBalances = (groupId: number) => request<BalancesResponse>('GET', `/groups/${groupId}/balances`)

@@ -4,6 +4,7 @@ import com.uttkarsh.billsync.domain.SplitType;
 import com.uttkarsh.billsync.dto.CreateExpenseRequest;
 import com.uttkarsh.billsync.dto.ExpenseResponse;
 import com.uttkarsh.billsync.dto.ExpenseResponse.ShareResponse;
+import com.uttkarsh.billsync.dto.UpdateExpenseRequest;
 import com.uttkarsh.billsync.service.ExpenseService;
 import com.uttkarsh.billsync.service.InvalidSplitException;
 import com.uttkarsh.billsync.service.NotFoundException;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -197,6 +199,30 @@ class ExpenseControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].description").value("Dinner at Truffles"))
                 .andExpect(jsonPath("$[0].shares[1].amountOwed").value("33.33"));
+    }
+
+    @Test
+    void renamesExpense() throws Exception {
+        given(expenseService.rename(eq(42L), any())).willReturn(dinner());
+
+        mvc.perform(patch("/api/expenses/42").contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"description\": \"Dinner at Truffles\" }"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description").value("Dinner at Truffles"));
+
+        ArgumentCaptor<UpdateExpenseRequest> captor = ArgumentCaptor.forClass(UpdateExpenseRequest.class);
+        verify(expenseService).rename(eq(42L), captor.capture());
+        assertThat(captor.getValue().description()).isEqualTo("Dinner at Truffles");
+    }
+
+    @Test
+    void rejectsBlankDescriptionOnRename() throws Exception {
+        mvc.perform(patch("/api/expenses/42").contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"description\": \"   \" }"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details", hasItem(containsString("description"))));
+
+        verifyNoInteractions(expenseService);
     }
 
     @Test

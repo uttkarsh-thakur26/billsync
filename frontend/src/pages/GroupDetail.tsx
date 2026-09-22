@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { useActing } from '../acting'
-import { addMember, deleteExpense, errorMessage, getBalances, getGroup, listExpenses, removeMember } from '../api/client'
+import { addMember, deleteExpense, errorMessage, getBalances, getGroup, listExpenses, removeMember, renameExpense } from '../api/client'
 import type { ExpenseResponse } from '../api/types'
 import { rupees, sign } from '../money'
 import { Alert, btn, btnSecondary, card, Empty, heading, input, Loading } from '../ui'
@@ -17,6 +17,7 @@ export default function GroupDetail() {
   )
   const [showAdd, setShowAdd] = useState(false)
   const [memberToAdd, setMemberToAdd] = useState('')
+  const [renaming, setRenaming] = useState<{ id: number; draft: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
 
@@ -47,6 +48,16 @@ export default function GroupDetail() {
     } finally {
       setBusy(false)
     }
+  }
+
+  function saveRename(e: FormEvent) {
+    e.preventDefault()
+    if (!renaming || renaming.draft.trim() === '') return
+    const { id, draft } = renaming
+    void run(async () => {
+      await renameExpense(id, { description: draft.trim() })
+      setRenaming(null)
+    })
   }
 
   function remove(expense: ExpenseResponse) {
@@ -165,8 +176,37 @@ export default function GroupDetail() {
             {expenses.map((e) => (
               <li key={e.id} className={card}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium">{e.description}</p>
+                  <div className="min-w-0 flex-1">
+                    {renaming?.id === e.id ? (
+                      <form onSubmit={saveRename} className="flex flex-wrap items-center gap-2">
+                        <input
+                          className={`${input} min-w-48 flex-1`}
+                          value={renaming.draft}
+                          onChange={(ev) => setRenaming({ id: e.id, draft: ev.target.value })}
+                          onKeyDown={(ev) => ev.key === 'Escape' && setRenaming(null)}
+                          maxLength={255}
+                          autoFocus
+                          aria-label="Description"
+                        />
+                        <button className={btn} disabled={busy || renaming.draft.trim() === ''}>
+                          Save
+                        </button>
+                        <button type="button" className={btnSecondary} onClick={() => setRenaming(null)}>
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="font-medium">
+                        {e.description}
+                        <button
+                          type="button"
+                          className="ml-2 text-xs font-normal text-gray-500 hover:underline"
+                          onClick={() => setRenaming({ id: e.id, draft: e.description })}
+                        >
+                          Rename
+                        </button>
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">
                       {nameOf(e.paidByUserId)} paid <span className="font-medium text-gray-900">{rupees(e.amount)}</span>
                       {' · '}split {e.splitType.toLowerCase()}

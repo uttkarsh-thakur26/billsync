@@ -5,6 +5,7 @@ import com.uttkarsh.billsync.domain.ExpenseGroup;
 import com.uttkarsh.billsync.domain.SplitType;
 import com.uttkarsh.billsync.dto.CreateExpenseRequest;
 import com.uttkarsh.billsync.dto.ExpenseResponse;
+import com.uttkarsh.billsync.dto.UpdateExpenseRequest;
 import com.uttkarsh.billsync.repository.ExpenseGroupRepository;
 import com.uttkarsh.billsync.repository.ExpenseRepository;
 import com.uttkarsh.billsync.repository.GroupMemberRepository;
@@ -74,6 +75,13 @@ public class ExpenseService {
         return expenses.findByGroupIdOrderByCreatedAtDescIdDesc(groupId).stream()
                 .map(ExpenseResponse::from)
                 .toList();
+    }
+
+    public ExpenseResponse rename(Long expenseId, UpdateExpenseRequest request) {
+        Expense expense = expenses.findById(expenseId)
+                .orElseThrow(() -> new NotFoundException("Expense " + expenseId + " not found"));
+        expense.setDescription(request.description().trim());
+        return ExpenseResponse.from(expense);
     }
 
     public void delete(Long expenseId) {

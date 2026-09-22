@@ -63,7 +63,7 @@ The tests use in-memory H2 and need neither Docker nor a running backend.
 
 ## API
 
-Fifteen endpoints under `/api`. Full request and response schemas are in Swagger.
+Sixteen endpoints under `/api`. Full request and response schemas are in Swagger.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -78,6 +78,7 @@ Fifteen endpoints under `/api`. Full request and response schemas are in Swagger
 | DELETE | `/api/groups/{id}/members/{userId}` | Remove a member (only when their balance is zero) |
 | POST | `/api/groups/{id}/expenses` | Add an expense |
 | GET | `/api/groups/{id}/expenses` | List a group's expenses, newest first |
+| PATCH | `/api/expenses/{id}` | Change an expense's description |
 | DELETE | `/api/expenses/{id}` | Delete an expense |
 | GET | `/api/groups/{id}/balances` | Net balance per member |
 | GET | `/api/groups/{id}/settlement-plan` | The simplified list of payments |
@@ -150,7 +151,7 @@ One shape everywhere, produced by a single `@RestControllerAdvice`:
 
 ### Correcting mistakes
 
-There is no edit endpoint and no delete for settlements, on purpose. A wrong expense is deleted and re-added; its shares go with it. A wrong settlement is corrected by recording the reverse payment, which nets it to zero: the ledger is append-only and history is never rewritten. A member can be removed only when their balance in the group is exactly zero, and their past expenses stay on record. A person can be deleted only once they are in no group and named in no expense or settlement; the foreign keys enforce the second part, so it cannot be bypassed.
+A typo in a description is fixed in place. Anything that moves money is not: there is no endpoint to change an expense's amount, payer or split, and no delete for settlements, on purpose. A wrong expense is deleted and re-added; its shares go with it. A wrong settlement is corrected by recording the reverse payment, which nets it to zero: the ledger is append-only and history is never rewritten. A member can be removed only when their balance in the group is exactly zero, and their past expenses stay on record. A person can be deleted only once they are in no group and named in no expense or settlement; the foreign keys enforce the second part, so it cannot be bypassed.
 
 ## Splitting with exact paise
 

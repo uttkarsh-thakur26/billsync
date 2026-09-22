@@ -2,6 +2,7 @@ package com.uttkarsh.billsync.web;
 
 import com.uttkarsh.billsync.dto.CreateExpenseRequest;
 import com.uttkarsh.billsync.dto.ExpenseResponse;
+import com.uttkarsh.billsync.dto.UpdateExpenseRequest;
 import com.uttkarsh.billsync.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,6 +40,12 @@ public class ExpenseController {
     @Operation(summary = "List a group's expenses, newest first")
     public List<ExpenseResponse> list(@PathVariable Long groupId) {
         return expenseService.list(groupId);
+    }
+
+    @PatchMapping("/expenses/{id}")
+    @Operation(summary = "Change an expense's description")
+    public ExpenseResponse rename(@PathVariable Long id, @Valid @RequestBody UpdateExpenseRequest request) {
+        return expenseService.rename(id, request);
     }
 
     @DeleteMapping("/expenses/{id}")
